@@ -1,0 +1,42 @@
+services:
+  mysql-main:
+    image: mysql:8.0
+    container_name: mysql-main
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: test
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-main/conf:/etc/mysql/conf.d
+      - ./mysql-main/data:/var/lib/mysql
+      - ./mysql-main/init:/docker-entrypoint-initdb.d
+    command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW
+    networks:
+      - mysql-network
+
+  mysql-replica:
+    image: mysql:8.0
+    container_name: mysql-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: test
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root1234
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql-replica/conf:/etc/mysql/conf.d
+      - ./mysql-replica/data:/var/lib/mysql
+      - ./mysql-replica/init:/docker-entrypoint-initdb.d
+    command: --server-id=2 --relay-log=mysql-relay-bin --log-bin=mysql-bin --binlog-format=ROW
+    depends_on:
+      - mysql-main
+    networks:
+      - mysql-network
+
+networks:
+  mysql-network:
+    driver: bridge
